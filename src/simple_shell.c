@@ -100,47 +100,66 @@ int launch(char* command, int is_background) { //launches commmand and returns s
     status = create_process_and_run(command, is_background);
     return status;
 }
+// Function to extract and validate priority value
+int get_priority(char* priority_arg) {
+    int priority = 1; // Default priority
+
+    if (priority_arg != NULL) {
+        priority = atoi(priority_arg); // Convert priority to integer
+
+        // Validate priority (should be between 1 and 4)
+        if (priority < 1 || priority > 4) {
+            fprintf(stderr, "Invalid priority value. Must be between 1 and 4.\n");
+            exit(EXIT_FAILURE);
+        }
+    }
+
+    return priority;
+}
 
 int create_process_and_run(char* command, int is_background) {
     int status = fork(); // Creating a child process to run the command
-
 
     // Fork() returns a negative value if something goes wrong
     if (status < 0) {
         printf("Child process couldn't be formed correctly\n");
         exit(0);
-    } 
-    
+    }
+
     // Fork() returns 0 for child process
     else if (status == 0) {
-    // Handle commands with pipes, if there is any '|' in the command
-        if (strchr(command, '|')) 
-        {
-            printf("Cannot execute command with pipes");
-            return 1;
-            //execute_command_with_pipes(command);
+        // Handle commands with pipes, if there is any '|' in the command
+        if (strchr(command, '|')) {
+            printf("Cannot execute command with pipes\n");
+            exit(EXIT_FAILURE);
         }
-        
+
         if (strncmp(command, "submit", 6) != 0) {
             printf("Commands must start with 'submit'\n");
-            return 1;
+            exit(EXIT_FAILURE);
         }
-        char* args[MAX_ARGS]; // Defining max size of args array
-        
+
+        char* args[MAX_ARGS]; // Define max size of args array
+
         // Parse the command into arguments array
         split_command_into_args(command, args);
-        
+
+        // Check if there's an executable after 'submit'
         if (args[1] == NULL) {
             fprintf(stderr, "Error: No executable specified after 'submit'.\n");
             exit(EXIT_FAILURE);
         }
 
-        execvp(args[1], &args[1]); // Execute the command
-        printf("Should not reach here");
+        // Get the priority using the helper function
+        int priority = get_priority(args[2]);
+        //Do something like this calls scheduler's add method to queue, and at T = 0 scheduler runs all proccesses it has in the queue ?? acc to priority
+        // Execute the specified program without additional arguments
+        execlp(args[1], args[1], NULL); // Pass only the executable
+
+        // If exec fails, print error and exit
+        fprintf(stderr, "Execution failed for command: %s\n", args[1]);
         exit(EXIT_FAILURE);
-    } 
-    
-    else { 
+    } else {
         // Parent process
         if (!is_background) {
             // If it's not a background process, wait for the child
@@ -149,10 +168,9 @@ int create_process_and_run(char* command, int is_background) {
             // For background processes, don't wait
             printf("Process running in background with PID: %d\n", status);
         }
-    }    
+    }
     return 1; // Needs to return 1 to keep the shell running
 }
-
 
 void split_command_into_args(char* command, char* args[]) {
     char* token = strtok(command, " ");
