@@ -1,5 +1,8 @@
 #include "simple_shell.h"
 
+int NCPU;
+int TSLICE;
+
 void handle_sigint(int sig){
     printf("\nCaught Signle Ctrl+C\n");  //if pressed ctrl +c , process will terminate and this msg will be shown
     printf("%s",command_details);  
@@ -111,15 +114,28 @@ int create_process_and_run(char* command, int is_background) {
     // Fork() returns 0 for child process
     else if (status == 0) {
     // Handle commands with pipes, if there is any '|' in the command
-        if (strchr(command, '|')) {
-            execute_command_with_pipes(command);
+        if (strchr(command, '|')) 
+        {
+            printf("Cannot execute command with pipes");
+            return 1;
+            //execute_command_with_pipes(command);
+        }
+        
+        if (strncmp(command, "submit", 6) != 0) {
+            printf("Commands must start with 'submit'\n");
+            return 1;
         }
         char* args[MAX_ARGS]; // Defining max size of args array
         
         // Parse the command into arguments array
         split_command_into_args(command, args);
         
-        execvp(args[0], args); // Execute the command
+        if (args[1] == NULL) {
+            fprintf(stderr, "Error: No executable specified after 'submit'.\n");
+            exit(EXIT_FAILURE);
+        }
+
+        execvp(args[1], &args[1]); // Execute the command
         printf("Should not reach here");
         exit(EXIT_FAILURE);
     } 
@@ -138,55 +154,6 @@ int create_process_and_run(char* command, int is_background) {
 }
 
 
-int spawn_proc(int in, int out, char* cmd) {
-    int pid;
-    char* args[MAX_ARGS];
-    split_command_into_args(cmd, args);
-
-    if ((pid = fork()) == 0) {
-        if (in != 0) {
-            dup2(in, 0); // for all other processes we are redirecting std in
-            close(in);
-        }
-        if (out != 1) {
-            dup2(out, 1); // stdout redirect
-            close(out);
-        }
-        execvp(args[0], args);
-        perror("execvp failed");
-        exit(EXIT_FAILURE);
-    }
-    return pid;
-}
-
-void execute_command_with_pipes(char* command) {
-    int fd[2];
-    int command_count = 0;
-    char* commands[MAX_ARGS];
-
-    split_command_by_pipes(command, commands, &command_count);
-
-    int in_fd = 0; // Input file descriptor for the first command
-
-    for (int i = 0; i < command_count - 1; i++) {
-        pipe(fd);
-        spawn_proc(in_fd, fd[1], commands[i]);
-        close(fd[1]); // Close the write end of the pipe in the parent
-        in_fd = fd[0]; // Save the read end for the next command
-    }
-
-    // Handle the last command
-    if (in_fd != 0) {
-        dup2(in_fd, 0); // Redirect stdin from the last pipe
-        close(in_fd);
-    }
-    char* last_args[MAX_ARGS];
-    split_command_into_args(commands[command_count - 1], last_args);
-    execvp(last_args[0], last_args);
-    perror("execvp failed");
-    exit(EXIT_FAILURE);
-}
-
 void split_command_into_args(char* command, char* args[]) {
     char* token = strtok(command, " ");
     int i = 0;
@@ -197,17 +164,6 @@ void split_command_into_args(char* command, char* args[]) {
     args[i] = NULL; // NULL terminate the args array
 }
 
-
-void split_command_by_pipes(char* command, char* commands[], int* command_count) {
-    char* token = strtok(command, "|");
-    *command_count = 0;
-    
-    while (token != NULL) {
-        commands[(*command_count)++] = token;
-        token = strtok(NULL, "|");
-    }
-    commands[*command_count] = NULL; // NULL terminate the commands array
-}
 
 void add_details(char* command , int pid, long start_time, long end_time) {
     char buffer[256];
@@ -224,8 +180,6 @@ void add_details(char* command , int pid, long start_time, long end_time) {
         details_length += strlen(buffer);
     }
 }
-
-
 
 // History-related functions
 void add_to_history(char* command) {//adding commands to hostry if not full
@@ -249,18 +203,40 @@ void free_history() { //deallocating mem
     }
 }
 
-int main() {
-    //Initialising the details array
+int main(int argc, char *argv[]) {
+    // Check for the correct number of arguments
+    if (argc != 3) {
+        fprintf(stderr, "Usage: %s <NCPU> <TSLICE (ms)>\n", argv[0]);
+        return EXIT_FAILURE;
+    }
+
+    // Parse and validate NCPU
+    NCPU = atoi(argv[1]);
+    if (NCPU <= 0) {
+        fprintf(stderr, "Error: NCPU must be a positive integer.\n");
+        return EXIT_FAILURE;
+    }
+
+    // Parse and validate TSLICE
+    TSLICE = atoi(argv[2]);
+    if (TSLICE <= 0) {
+        fprintf(stderr, "Error: TSLICE must be a positive integer in milliseconds.\n");
+        return EXIT_FAILURE;
+    }
+
+    // Initialize the command details array
     command_details[0] = '\0';
 
-    //Signal handling for Ctrl + C
+    // Signal handling for Ctrl + C
     struct sigaction sa;
     memset(&sa, 0, sizeof(sa));
     sa.sa_handler = handle_sigint;
     sigaction(SIGINT, &sa, NULL);
 
-
+    // Start the main shell loop
     shell_loop();
-    free_history(); // Free history at the end
+
+    // Free history at the end
+    free_history();
     return 0;
 }
