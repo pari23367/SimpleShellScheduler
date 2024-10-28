@@ -22,6 +22,14 @@ void enqueue(Queue *q, Process process) {
     if (isEmpty(q)) {
         q->front = 0;
     }
+    
+    // Find the correct position to insert based on priority
+    int i = q->rear;
+    while (i >= q->front && q->processes[i].priority < process.priority) {
+        q->processes[(i + 1) % MAX_PROCESSES] = q->processes[i]; // Shift elements to make room
+        i = (i - 1 + MAX_PROCESSES) % MAX_PROCESSES; // Wrap around
+    }
+
     q->rear = (q->rear + 1) % MAX_PROCESSES;
     q->processes[q->rear] = process;
 }

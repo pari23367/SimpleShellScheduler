@@ -10,6 +10,7 @@ typedef struct {
     char name[256];
     int completion_time;
     int wait_time;
+    int priority;
 } Process;
 
 typedef struct {

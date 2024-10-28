@@ -153,6 +153,8 @@ int create_process_and_run(char* command, int is_background) {
         // Get the priority using the helper function
         int priority = get_priority(args[2]);
         //Do something like this calls scheduler's add method to queue, and at T = 0 scheduler runs all proccesses it has in the queue ?? acc to priority
+        
+        pause(); // Wait for a signal from the scheduler
         // Execute the specified program without additional arguments
         execlp(args[1], args[1], NULL); // Pass only the executable
 
@@ -160,6 +162,7 @@ int create_process_and_run(char* command, int is_background) {
         fprintf(stderr, "Execution failed for command: %s\n", args[1]);
         exit(EXIT_FAILURE);
     } else {
+        add_process(status); //adding to the queue our process pid
         // Parent process
         if (!is_background) {
             // If it's not a background process, wait for the child
