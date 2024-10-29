@@ -4,8 +4,8 @@
 
 //Initialising queue
 void initQueue(Queue *q) {
-    q->front = -1;
-    q->rear = -1;
+    q->front = NULL;
+    q->rear = NULL;
 }
 
 // Function that return 1 if queue is empty
