@@ -6,6 +6,9 @@
 #include <stdlib.h>
 #include <signal.h>
 #include <unistd.h>
+#include <sys/mman.h>
+#include <fcntl.h>
+#include <sys/stat.h>
 
 // Global variables for the scheduler
 Queue *ready_queue; 
@@ -16,11 +19,12 @@ int TSLICE;     // Time slice in milliseconds
 void initialize_scheduler(int ncpu, int tslice) {
     NCPU = ncpu;
     TSLICE = tslice;
-    ready_queue = malloc(sizeof(Queue));
-    if (ready_queue == NULL) {
-        perror("Failed to allocate memory for ready_queue");
-        exit(EXIT_FAILURE);
-    }
+    //ready_queue = malloc(sizeof(Queue));
+    //if (ready_queue == NULL) {
+      //  perror("Failed to allocate memory for ready_queue");
+        //exit(EXIT_FAILURE);
+    //}
+    ready_queue = create_shared_queue();
     initQueue(ready_queue);
 }
 

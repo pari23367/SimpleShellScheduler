@@ -8,6 +8,27 @@ void initQueue(Queue *q) {
     q->rear = -1;
 }
 
+Queue* create_shared_queue() {
+    int shm_fd = shm_open("/my_queue", O_CREAT | O_RDWR, 0666);
+    if (shm_fd < 0) {
+        perror("Failed to open shared memory");
+        exit(EXIT_FAILURE);
+    }
+    
+    if (ftruncate(shm_fd, sizeof(Queue)) == -1) {
+        perror("Failed to set size of shared memory");
+        exit(EXIT_FAILURE);
+    }
+    
+    Queue* queue = mmap(NULL, sizeof(Queue), PROT_READ | PROT_WRITE, MAP_SHARED, shm_fd, 0);
+    if (queue == MAP_FAILED) {
+        perror("Failed to map shared memory");
+        exit(EXIT_FAILURE);
+    }
+    
+    return queue;
+}
+
 // Function that return 1 if queue is empty
 int isEmpty(Queue *q) {
     return (q->front == -1);

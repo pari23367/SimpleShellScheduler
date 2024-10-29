@@ -1,7 +1,14 @@
 // simple_scheduler.h
 #ifndef SIMPLE_SCHEDULER_H
 #define SIMPLE_SCHEDULER_H
-
+#include <sys/mman.h>
+#include <fcntl.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <errno.h>
 #include <signal.h>
 #include <sys/types.h>
 #include <unistd.h>

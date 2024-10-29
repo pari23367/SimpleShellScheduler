@@ -1,7 +1,10 @@
 #include "simple_shell.h"
 #include "queue.h"
+#include <sys/mman.h>
+#include <fcntl.h>
+#include <sys/stat.h>
 
-extern Queue ready_queue;
+extern Queue * ready_queue;
 extern int NCPU;
 extern int TSLICE;
 
@@ -23,7 +26,7 @@ long get_time() {
 }
 
 void shell_loop() {
-    
+    ready_queue = create_shared_queue(); 
     while(status) {  // while the status is one it will loop infinitely
         // Printing the shell prompt
         printf("iiitd@possum:~$ ");
@@ -170,7 +173,7 @@ int create_process_and_run(char* command, int is_background) {
         new_process.priority = priority; // Your logic to get priority
 
         // Assuming ready_queue is declared and accessible
-        add_process(&ready_queue, new_process);
+        add_process(ready_queue, new_process);
         // Parent process
         printf("Checkpint after adding process");
         if (!is_background) {
