@@ -26,12 +26,14 @@ void initialize_scheduler(int ncpu, int tslice) {
 
 // Add a new process to the scheduler
 void add_process(Queue *ready_queue, pid_t pid, const char *name, int completion_time, int wait_time, int priority) {
+    printf("Adding process to queue\n");
     Process new_process;
     new_process.pid = pid;
     snprintf(new_process.name, sizeof(new_process.name), "%s", name); // Copy the name safely
     new_process.completion_time = completion_time;
     new_process.wait_time = wait_time;
     new_process.priority = priority;
+    printf("Adding adding\n");
     enqueue(ready_queue, new_process);  // Pass the Process instance
 }
 
@@ -39,6 +41,7 @@ void add_process(Queue *ready_queue, pid_t pid, const char *name, int completion
 void signal_processes() {
     for (int i = 0; i < NCPU; i++) {
         if (!isEmpty(ready_queue)) { // Check if the queue is not empty
+            printf("Dequeue-ing a process\n");
             Process process = dequeue(ready_queue);  // Dequeue a Process
             pid_t pid = process.pid;
             if (pid > 0) {
@@ -56,6 +59,7 @@ void scheduler_loop() {
 
         // Signal NCPU processes to run
         signal_processes();
+        printf("Signaling processes to run\n");
 
         // After TSLICE, send SIGSTOP to running processes
         for (int i = 0; i < NCPU; i++) {

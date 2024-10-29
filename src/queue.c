@@ -15,15 +15,18 @@ int isEmpty(Queue *q) {
 
 // Adds new element to our circular queue
 void enqueue(Queue *q, Process process) {
+    printf("Starting to enqueue\n");
     if ((q->rear + 1) % MAX_PROCESSES == q->front) {
         fprintf(stderr, "Overflow\n");
         return;
     }
     if (isEmpty(q)) {
+        printf("Queue was empty before\n");
         q->front = 0;
     }
     
     // Find the correct position to insert based on priority
+    printf("Finding position in queue\n");
     int i = q->rear;
     while (i >= q->front && q->processes[i].priority < process.priority) {
         q->processes[(i + 1) % MAX_PROCESSES] = q->processes[i]; // Shift elements to make room
@@ -32,6 +35,7 @@ void enqueue(Queue *q, Process process) {
 
     q->rear = (q->rear + 1) % MAX_PROCESSES;
     q->processes[q->rear] = process;
+    printf("Enqueued the process\n");
 }
 
 //Removes and returns first element of queue
