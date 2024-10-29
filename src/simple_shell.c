@@ -1,7 +1,7 @@
 #include "simple_shell.h"
 
-int NCPU;
-int TSLICE;
+extern int NCPU;
+extern int TSLICE;
 
 void handle_sigint(int sig){
     printf("\nCaught Signle Ctrl+C\n");  //if pressed ctrl +c , process will terminate and this msg will be shown

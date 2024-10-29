@@ -4,9 +4,11 @@
 #include "queue.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <signal.h>
+#include <unistd.h>
 
 // Global variables for the scheduler
-ProcessQueue ready_queue;
+Queue *ready_queue; 
 int NCPU;       // Number of CPUs (processes to run concurrently)
 int TSLICE;     // Time slice in milliseconds
 
@@ -14,21 +16,35 @@ int TSLICE;     // Time slice in milliseconds
 void initialize_scheduler(int ncpu, int tslice) {
     NCPU = ncpu;
     TSLICE = tslice;
-    initialize_queue(&ready_queue);
+    ready_queue = malloc(sizeof(Queue));
+    if (ready_queue == NULL) {
+        perror("Failed to allocate memory for ready_queue");
+        exit(EXIT_FAILURE);
+    }
+    initQueue(ready_queue);
 }
 
 // Add a new process to the scheduler
-void add_process(pid_t pid) {
-    enqueue(&ready_queue, pid);
+void add_process(Queue *ready_queue, pid_t pid, const char *name, int completion_time, int wait_time, int priority) {
+    Process new_process;
+    new_process.pid = pid;
+    snprintf(new_process.name, sizeof(new_process.name), "%s", name); // Copy the name safely
+    new_process.completion_time = completion_time;
+    new_process.wait_time = wait_time;
+    new_process.priority = priority;
+    enqueue(ready_queue, new_process);  // Pass the Process instance
 }
 
 //To run a process
 void signal_processes() {
     for (int i = 0; i < NCPU; i++) {
-        pid_t pid = dequeue(&ready_queue);
-        if (pid > 0) {
-            // Send SIGCONT to resume the process
-            kill(pid, SIGCONT);
+        if (!isEmpty(ready_queue)) { // Check if the queue is not empty
+            Process process = dequeue(ready_queue);  // Dequeue a Process
+            pid_t pid = process.pid;
+            if (pid > 0) {
+                // Send SIGCONT to resume the process
+                kill(pid, SIGCONT);
+            }
         }
     }
 }
@@ -43,10 +59,14 @@ void scheduler_loop() {
 
         // After TSLICE, send SIGSTOP to running processes
         for (int i = 0; i < NCPU; i++) {
-            pid_t pid = dequeue(&ready_queue);
-            if (pid > 0) {
-                kill(pid, SIGSTOP);
-                enqueue(&ready_queue, pid); // Re-add to the queue
+            if (!isEmpty(ready_queue)) { // Check if the queue is not empty
+                Process process = dequeue(ready_queue);
+                pid_t pid = process.pid;
+                if (pid > 0) {
+                    kill(pid, SIGSTOP);
+                    enqueue(ready_queue, process); // Re-add to the queue
+                }
             }
         }
     }
+}
