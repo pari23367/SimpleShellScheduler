@@ -4,8 +4,8 @@
 
 //Initialising queue
 void initQueue(Queue *q) {
-    q->front = NULL;
-    q->rear = NULL;
+    q->front = -1;
+    q->rear = -1;
 }
 
 // Function that return 1 if queue is empty
@@ -13,57 +13,49 @@ int isEmpty(Queue *q) {
     return (q->front == -1);
 }
 
-// Adds new element to our circular queue
+// Adds a new process to the queue with priority ordering
 void enqueue(Queue *q, Process process) {
-    printf("Starting to enqueue\n");
+    printf("Starting to enqueue process %s\n", process.name);
 
-    // Check if the queue is full
-    //if ((q->rear + 1) % MAX_PROCESSES == q->front) {
-      //  fprintf(stderr, "Queue Overflow: Unable to add process %s\n", process.name);
-        //return; // Return early if the queue is full
-    //}
-    printf("Reached checkpint 1\n");
-    // Initialize queue if it is currently empty
-    if (!(q->front)) {
-        printf("Queue was empty before\n");
-        q->front = 0;
-        q->rear = 0;
-        q->processes[q->rear] = process; // Directly assign the process
-        printf("Enqueued the process (first element)\n");
-        return; // Early return since we added the first element
+    printf("Check if the queue is full");
+    if (q->rear >= MAX_PROCESSES - 1) {
+        fprintf(stderr, "Queue Overflow: Unable to add process %s\n", process.name);
+        return;
     }
 
-    // Find the correct position to insert based on priority
-    printf("Finding position in queue\n");
+    // Increment rear to add the new process at the next position
+    q->rear++;
+
+    printf("Find the correct position to insert based on priority (higher priority first)");
     int i = q->rear;
-
-    // Shift elements to make room for the new process
-    while (i >= q->front && q->processes[i].priority < process.priority) {
-        q->processes[(i + 1) % MAX_PROCESSES] = q->processes[i]; // Shift elements
-        i = (i - 1 + MAX_PROCESSES) % MAX_PROCESSES; // Wrap around
+    while (i > q->front && q->processes[i - 1].priority < process.priority) {
+        q->processes[i] = q->processes[i - 1]; // Shift elements to the right
+        i--;
     }
 
-    // Update the rear to point to the next position
-    q->rear = (q->rear + 1) % MAX_PROCESSES;
-
-    // Insert the new process
-    q->processes[q->rear] = process;
-    printf("Enqueued the process: %s with priority: %d\n", process.name, process.priority);
+    printf("Insert the new process at the found position");
+    q->processes[i] = process;
+    printf("Enqueued process: %s with priority: %d\n", process.name, process.priority);
 }
 
-//Removes and returns first element of queue
+// Removes and returns the first process in the queue
 Process dequeue(Queue *q) {
     if (isEmpty(q)) {
-        fprintf(stderr, "Underflow\n");
+        fprintf(stderr, "Queue Underflow\n");
         exit(EXIT_FAILURE);
     }
+
+    // Get the process at the front of the queue
     Process process = q->processes[q->front];
-    if (q->front == q->rear) {
-        q->front = q->rear = -1;
-    } 
-    else {
-        q->front = (q->front + 1) % MAX_PROCESSES;
+    
+    // Move the front index to the next element
+    q->front++;
+
+    // Reset the queue if it's empty after the dequeue operation
+    if (isEmpty(q)) {
+        q->front = 0;
+        q->rear = -1;
     }
+
     return process;
 }
-

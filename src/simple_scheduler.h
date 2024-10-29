@@ -15,7 +15,7 @@ extern int TSLICE;   // Time slice in milliseconds
 void initialize_scheduler(int ncpu, int tslice);
 
 // Adds a new process to the scheduling queue
-void add_process(Queue *ready_queue, pid_t pid, const char *name, int completion_time, int wait_time, int priority);
+void add_process(Queue *ready_queue, Process new_process);
 
 // Signals processes to resume or pause based on the scheduling algorithm
 void signal_processes();

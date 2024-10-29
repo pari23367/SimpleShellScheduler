@@ -25,16 +25,22 @@ void initialize_scheduler(int ncpu, int tslice) {
 }
 
 // Add a new process to the scheduler
-void add_process(Queue *ready_queue, pid_t pid, const char *name, int completion_time, int wait_time, int priority) {
-    printf("Adding process to queue\n");
-    Process new_process;
-    new_process.pid = pid;
-    snprintf(new_process.name, sizeof(new_process.name), "%s", name); // Copy the name safely
-    new_process.completion_time = completion_time;
-    new_process.wait_time = wait_time;
-    new_process.priority = priority;
-    printf("Adding adding\n");
-    enqueue(ready_queue, new_process);  // Pass the Process instance
+void add_process(Queue *ready_queue, Process new_process) {
+    printf("Reached add process function\n");
+    printf("process name=%s\n",new_process.name);
+    //if (ready_queue->rear >= MAX_PROCESSES - 1) {
+      //  printf("Queue is full. Cannot add process.\n");
+        //return; // Optionally handle this case (e.g., by resizing or rejecting new processes)
+    //}
+
+    //printf("Incrementing rear\n");
+    // Increment rear and add the new process to the queue
+    //ready_queue->rear++;
+    //printf("Rear=%d\n",ready_queue->rear);
+    //ready_queue->processes[ready_queue->rear] = new_process; // Add the process to the queue
+    enqueue(ready_queue,new_process);
+    // Print debug information
+    printf("Process added to queue: PID=%d, Name=%s, Completion Time=%d, Wait Time=%d, Priority=%d\n", new_process.pid, new_process.name, new_process.completion_time, new_process.wait_time, new_process.priority);
 }
 
 //To run a process

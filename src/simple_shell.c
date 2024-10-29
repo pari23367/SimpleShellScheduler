@@ -1,5 +1,7 @@
 #include "simple_shell.h"
+#include "queue.h"
 
+extern Queue ready_queue;
 extern int NCPU;
 extern int TSLICE;
 
@@ -106,7 +108,7 @@ int get_priority(char* priority_arg) {
 
     if (priority_arg != NULL) {
         priority = atoi(priority_arg); // Convert priority to integer
-
+        
         // Validate priority (should be between 1 and 4)
         if (priority < 1 || priority > 4) {
             fprintf(stderr, "Invalid priority value. Must be between 1 and 4.\n");
@@ -119,7 +121,26 @@ int get_priority(char* priority_arg) {
 
 int create_process_and_run(char* command, int is_background) {
     int status = fork(); // Creating a child process to run the command
+    //int priority = 1;
+    if (strchr(command, '|')) {
+        printf("Cannot execute command with pipes\n");
+        exit(EXIT_FAILURE);
+    }
 
+    if (strncmp(command, "submit", 6) != 0) {
+        printf("Commands must start with 'submit'\n");
+        exit(EXIT_FAILURE);
+    }
+    char* args[MAX_ARGS];
+    split_command_into_args(command, args);
+    printf("checkpoint 1\n");
+    if (args[1] == NULL) {
+        fprintf(stderr, "Error: No executable specified after 'submit'.\n");
+        exit(EXIT_FAILURE);
+    }
+
+    int priority = get_priority(args[2]);
+        
     // Fork() returns a negative value if something goes wrong
     if (status < 0) {
         printf("Child process couldn't be formed correctly\n");
@@ -128,33 +149,10 @@ int create_process_and_run(char* command, int is_background) {
 
     // Fork() returns 0 for child process
     else if (status == 0) {
-        // Handle commands with pipes, if there is any '|' in the command
-        if (strchr(command, '|')) {
-            printf("Cannot execute command with pipes\n");
-            exit(EXIT_FAILURE);
-        }
-
-        if (strncmp(command, "submit", 6) != 0) {
-            printf("Commands must start with 'submit'\n");
-            exit(EXIT_FAILURE);
-        }
-
-        char* args[MAX_ARGS]; // Define max size of args array
-
-        // Parse the command into arguments array
-        split_command_into_args(command, args);
-
-        // Check if there's an executable after 'submit'
-        if (args[1] == NULL) {
-            fprintf(stderr, "Error: No executable specified after 'submit'.\n");
-            exit(EXIT_FAILURE);
-        }
-
-        // Get the priority using the helper function
-        int priority = get_priority(args[2]);
+        printf("checkpoint2\n");
         //Do something like this calls scheduler's add method to queue, and at T = 0 scheduler runs all proccesses it has in the queue ?? acc to priority
-        
         pause(); // Wait for a signal from the scheduler
+        printf("Checkpoint after pause\n");
         // Execute the specified program without additional arguments
         execlp(args[1], args[1], NULL); // Pass only the executable
 
@@ -162,8 +160,19 @@ int create_process_and_run(char* command, int is_background) {
         fprintf(stderr, "Execution failed for command: %s\n", args[1]);
         exit(EXIT_FAILURE);
     } else {
-        add_process(status); //adding to the queue our process pid
+        printf("Checkpoint3\n");
+        Process new_process;
+        new_process.pid = status; // Save the child's PID
+        snprintf(new_process.name, sizeof(new_process.name), "%s", args[1]); // Command name
+        //printf(new_process.name);
+        new_process.completion_time = 0; // Initialize as needed
+        new_process.wait_time = 0; // Initialize as needed
+        new_process.priority = priority; // Your logic to get priority
+
+        // Assuming ready_queue is declared and accessible
+        add_process(&ready_queue, new_process);
         // Parent process
+        printf("Checkpint after adding process");
         if (!is_background) {
             // If it's not a background process, wait for the child
             waitpid(status, NULL, 0); // Wait for the child process to complete

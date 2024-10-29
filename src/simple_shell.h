@@ -9,6 +9,7 @@
 #include <time.h>
 #include <signal.h>
 #include <sys/time.h>
+#include "queue.h"
 #define MAX_ARGS 20
 #define MAX_COMMAND_LENGTH 1024
 #define MAX_HISTORY_SIZE 100
@@ -38,4 +39,4 @@ void add_details(char* command, int pid , long start_time , long end_time);
 void add_to_history(char* command);
 void print_history();
 void free_history();
-void add_process(int pid);
+void add_process(Queue *q, Process p);
