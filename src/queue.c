@@ -24,7 +24,7 @@ void enqueue(Queue *q, Process process) {
     //}
     printf("Reached checkpint 1\n");
     // Initialize queue if it is currently empty
-    if (isEmpty(q)) {
+    if (!(q->front)) {
         printf("Queue was empty before\n");
         q->front = 0;
         q->rear = 0;
