@@ -17,6 +17,8 @@ void handle_sigint(int sig){
     
 }
 
+void signal_handlr(int sig){}
+
 long get_time() {
     struct timeval current_time;
     if (gettimeofday(&current_time, NULL) != 0) {  // func to get exact time of day 
@@ -28,7 +30,7 @@ long get_time() {
 }
 
 void shell_loop() {
-    ready_queue = create_shared_queue(); 
+    //ready_queue = create_shared_queue(); 
     while(status) {  // while the status is one it will loop infinitely
         // Printing the shell prompt
         printf("iiitd@possum:~$ ");
@@ -64,7 +66,6 @@ char* read_user_input() {
 
     if (fgets(input, MAX_COMMAND_LENGTH, stdin) == NULL) {  //taking input frm user 
         perror("Error reading input");
-        exit(EXIT_FAILURE);
     }
 
     // Remove newline character
@@ -145,6 +146,19 @@ int create_process_and_run(char* command, int is_background) {
     }
 
     int priority = get_priority(args[2]);
+    printf("Checkpoint3\n");
+    Process new_process;
+    new_process.pid = status; // Save the child's PID
+    snprintf(new_process.name, sizeof(new_process.name), "%s", args[1]); // Command name
+    //printf(new_process.name);
+    new_process.completion_time = 0; // Initialize as needed
+    new_process.wait_time = 0; // Initialize as needed
+    new_process.priority = priority; // Your logic to get priority
+    printf("Process created\n");
+    // Assuming ready_queue is declared and accessible
+    add_process(ready_queue, new_process);
+    // Parent process
+    printf("Checkpint after adding process");
         
     // Fork() returns a negative value if something goes wrong
     if (status < 0) {
@@ -154,6 +168,7 @@ int create_process_and_run(char* command, int is_background) {
 
     // Fork() returns 0 for child process
     else if (status == 0) {
+        signal(SIGCONT,signal_handlr);
         printf("checkpoint2\n");
         //Do something like this calls scheduler's add method to queue, and at T = 0 scheduler runs all proccesses it has in the queue ?? acc to priority
         pause(); // Wait for a signal from the scheduler
@@ -165,19 +180,6 @@ int create_process_and_run(char* command, int is_background) {
         fprintf(stderr, "Execution failed for command: %s\n", args[1]);
         exit(EXIT_FAILURE);
     } else {
-        printf("Checkpoint3\n");
-        Process new_process;
-        new_process.pid = status; // Save the child's PID
-        snprintf(new_process.name, sizeof(new_process.name), "%s", args[1]); // Command name
-        //printf(new_process.name);
-        new_process.completion_time = 0; // Initialize as needed
-        new_process.wait_time = 0; // Initialize as needed
-        new_process.priority = priority; // Your logic to get priority
-
-        // Assuming ready_queue is declared and accessible
-        add_process(ready_queue, new_process);
-        // Parent process
-        printf("Checkpint after adding process");
         if (!is_background) {
             // If it's not a background process, wait for the child
             waitpid(status, NULL, 0); // Wait for the child process to complete
@@ -281,7 +283,7 @@ int main(int argc, char *argv[]) {
         return EXIT_FAILURE;
     }
     
-
+    printf("Reached here\n");
     // Start the main shell loop
     shell_loop();
 

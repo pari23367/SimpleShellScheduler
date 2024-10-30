@@ -60,7 +60,7 @@ int isEmpty(Queue *q) {
 // Adds a new process to the queue with priority ordering
 void enqueue(Queue *q, Process process) {
     printf("Starting to enqueue process %s\n", process.name);
-
+    // q->processes[q->front].name
     printf("Check if the queue is full");
     if (q->rear >= MAX_PROCESSES - 1) {
         fprintf(stderr, "Queue Overflow: Unable to add process %s\n", process.name);
