@@ -40,6 +40,7 @@ void add_process(Queue *ready_queue, Process new_process) {
     //printf("process name=%s\n",new_process.name);
     sem_wait(queue_lock);  // Lock the queue
     //printf("sem wait\n");
+    printf("enqueue\n");
     enqueue(ready_queue, new_process);
     sem_post(queue_lock);  // Release the lock
     //printf("Process added to queue: PID=%d, Name=%s, Completion Time=%d, Wait Time=%d, Priority=%d\n", new_process.pid, new_process.name, new_process.completion_time, new_process.wait_time, new_process.priority);

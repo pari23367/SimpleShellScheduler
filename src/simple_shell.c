@@ -169,7 +169,7 @@ int create_process_and_run(char* command, int is_background) {
 
     // Fork() returns 0 for child process
     else if (status == 0) {
-        signal(SIGCONT,signal_handlr);
+       // signal(SIGCONT,signal_handlr);
       //  printf("checkpoint2\n");
         //Process new_process;
         //new_process.pid = getpid(); // Save the child's PID
@@ -183,7 +183,7 @@ int create_process_and_run(char* command, int is_background) {
         //add_process(ready_queue, new_process);
         //printf("command: %s%d\n" ,args[1],getpid());
         //Do something like this calls scheduler's add method to queue, and at T = 0 scheduler runs all proccesses it has in the queue ?? acc to priority
-        pause(); // Wait for a signal from the scheduler
+        //pause(); // Wait for a signal from the scheduler
         //printf("Checkpoint after pause\n");
         // Execute the specified program without additional arguments
         execlp(args[1], args[1], NULL); // Pass only the executable
