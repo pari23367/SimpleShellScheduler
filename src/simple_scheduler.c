@@ -50,7 +50,7 @@ void signal_processes() {
         sem_wait(queue_lock);  // Lock the queue for safe dequeue
         //printf("Sem wait under signal_process\n");
         if (!isEmpty(ready_queue)) {
-//            printf("Dequeue-ing a process\n");
+            //printf("Dequeue-ing a process\n");
             Process process = dequeue(ready_queue);
             pid_t pid = process.pid;
             sem_post(queue_lock);  // Release the lock after dequeueing

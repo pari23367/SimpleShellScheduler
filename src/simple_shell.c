@@ -32,27 +32,29 @@ long get_time() {
 void shell_loop() {
     //ready_queue = create_shared_queue(); 
     while(status) {  // while the status is one it will loop infinitely
-        // Printing the shell prompt
+        //Printing the shell prompt
         printf("iiitd@possum:~$ ");
         
         //Recoring start time of each command
-        long start_time = get_time();
+        //long start_time = get_time();
         
         // Reading user input
         char* command = read_user_input();
-    
+        
         // Handle the command
         handle_command(command); 
-
+        //handle_command("submit ../bin/fib");
         //Recording End time of each command
-        long end_time = get_time();
+        //long end_time = get_time();
         
         //Store the details into the global array details
-        add_details(command ,getpid(),start_time,end_time);  // adding details of every command inthe array
+        //add_details(command ,getpid(),start_time,end_time);  // adding details of every command inthe array
 
         free(command); // De-allocating memory after use
 
     }
+    //handle_command("submit ../bin/fib");
+    //handle_command("submit ../bin/helloworld");
 }
 
 char* read_user_input() {
@@ -124,7 +126,6 @@ int get_priority(char* priority_arg) {
 
     return priority;
 }
-
 int create_process_and_run(char* command, int is_background) {
     int status = fork(); // Creating a child process to run the command
     //int priority = 1;
@@ -144,7 +145,7 @@ int create_process_and_run(char* command, int is_background) {
         fprintf(stderr, "Error: No executable specified after 'submit'.\n");
         exit(EXIT_FAILURE);
     }
-
+   
     int priority = get_priority(args[2]);
 //    printf("Checkpoint3\n");
     Process new_process;
@@ -154,7 +155,7 @@ int create_process_and_run(char* command, int is_background) {
     new_process.completion_time = 0; // Initialize as needed
     new_process.wait_time = 0; // Initialize as needed
     new_process.priority = priority; // Your logic to get priority
-  //  printf("Process created\n");
+  ///  printf("Process created\n");
     // Assuming ready_queue is declared and accessible
     add_process(ready_queue, new_process);
     // Parent process
@@ -170,6 +171,17 @@ int create_process_and_run(char* command, int is_background) {
     else if (status == 0) {
         signal(SIGCONT,signal_handlr);
       //  printf("checkpoint2\n");
+        //Process new_process;
+        //new_process.pid = getpid(); // Save the child's PID
+        //snprintf(new_process.name, sizeof(new_process.name), "%s", args[1]); // Command name
+        //printf(new_process.name);
+        //new_process.completion_time = 0; // Initialize as needed
+        //new_process.wait_time = 0; // Initialize as needed
+        //new_process.priority = priority; // Your logic to get priority
+      //  printf("Process created\n");
+        // Assuming ready_queue is declared and accessible
+        //add_process(ready_queue, new_process);
+        //printf("command: %s%d\n" ,args[1],getpid());
         //Do something like this calls scheduler's add method to queue, and at T = 0 scheduler runs all proccesses it has in the queue ?? acc to priority
         pause(); // Wait for a signal from the scheduler
         //printf("Checkpoint after pause\n");
