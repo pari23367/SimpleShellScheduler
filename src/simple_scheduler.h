@@ -18,6 +18,8 @@
 extern int NCPU;     // Number of CPUs (or processes to run concurrently)
 extern int TSLICE;   // Time slice in milliseconds
 
+void scheduler_handle_signint(int sig); 
+
 // Initializes the scheduler with a specified number of CPUs and time slice
 void initialize_scheduler(int ncpu, int tslice);
 

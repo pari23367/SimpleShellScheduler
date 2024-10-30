@@ -43,4 +43,5 @@ void add_to_history(char* command);
 void print_history();
 void free_history();
 void scheduler_loop();
+void initialize_scheduler();
 void add_process(Queue *q, Process p);

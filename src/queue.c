@@ -1,34 +1,57 @@
 #include "queue.h"
 #include <stdio.h>
 #include <stdlib.h>
-
+#include <semaphore.h>
 //Initialising queue
 void initQueue(Queue *q) {
     q->front = -1;
     q->rear = -1;
 }
 
-Queue* create_shared_queue() {
+Queue* create_shared_queue(sem_t **queue_lock) {
+    // Create shared memory for the queue
     int shm_fd = shm_open("/my_queue", O_CREAT | O_RDWR, 0666);
     if (shm_fd < 0) {
-        perror("Failed to open shared memory");
+        perror("Failed to open shared memory for queue");
         exit(EXIT_FAILURE);
     }
-    
     if (ftruncate(shm_fd, sizeof(Queue)) == -1) {
-        perror("Failed to set size of shared memory");
+        perror("Failed to set size of shared memory for queue");
         exit(EXIT_FAILURE);
     }
-    
     Queue* queue = mmap(NULL, sizeof(Queue), PROT_READ | PROT_WRITE, MAP_SHARED, shm_fd, 0);
     if (queue == MAP_FAILED) {
-        perror("Failed to map shared memory");
+        perror("Failed to map shared memory for queue");
         exit(EXIT_FAILURE);
     }
-    
+
+    // Initialize queue structure
+    initQueue(queue);
+
+    // Create shared memory for the semaphore
+    int sem_fd = shm_open("/my_semaphore", O_CREAT | O_RDWR, 0666);
+    if (sem_fd < 0) {
+        perror("Failed to open shared memory for semaphore");
+        exit(EXIT_FAILURE);
+    }
+    if (ftruncate(sem_fd, sizeof(sem_t)) == -1) {
+        perror("Failed to set size of shared memory for semaphore");
+        exit(EXIT_FAILURE);
+    }
+    *queue_lock = mmap(NULL, sizeof(sem_t), PROT_READ | PROT_WRITE, MAP_SHARED, sem_fd, 0);
+    if (*queue_lock == MAP_FAILED) {
+        perror("Failed to map shared memory for semaphore");
+        exit(EXIT_FAILURE);
+    }
+
+    // Initialize semaphore with value 1 (unlocked state)
+    if (sem_init(*queue_lock, 1, 1) == -1) {
+        perror("Failed to initialize semaphore");
+        exit(EXIT_FAILURE);
+    }
+
     return queue;
 }
-
 // Function that return 1 if queue is empty
 int isEmpty(Queue *q) {
     return (q->front == -1);

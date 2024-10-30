@@ -3,10 +3,12 @@
 #include <sys/mman.h>
 #include <fcntl.h>
 #include <sys/stat.h>
+#include <semaphore.h>
 
-extern Queue * ready_queue;
-extern int NCPU;
-extern int TSLICE;
+Queue * ready_queue;
+int NCPU;
+int TSLICE;
+sem_t *queue_lock;
 
 void handle_sigint(int sig){
     printf("\nCaught Signle Ctrl+C\n");  //if pressed ctrl +c , process will terminate and this msg will be shown
@@ -266,10 +268,12 @@ int main(int argc, char *argv[]) {
     sa.sa_handler = handle_sigint;
     sigaction(SIGINT, &sa, NULL);
     
+    ready_queue = create_shared_queue(&queue_lock);
+
     // RUNNING THE SCHEDULER
     int scheduler_pid = fork();
     if (scheduler_pid == 0) {
-        // Child process for the scheduler
+        initialize_scheduler(NCPU,TSLICE);// Child process for the scheduler
         scheduler_loop();  // This function will run independently
         exit(0);           // Ensure it exits once done
     } else if (scheduler_pid < 0) {
