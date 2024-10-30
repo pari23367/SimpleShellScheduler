@@ -10,7 +10,7 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <semaphore.h>
-
+#include <sys/time.h>
 // Global variables for the scheduler
 extern Queue *ready_queue; 
 extern int NCPU;       // Number of CPUs (processes to run concurrently)
@@ -20,6 +20,11 @@ extern sem_t *queue_lock;
 // Global flag for scheduler loop control
 volatile sig_atomic_t scheduler_running = 1;
 
+void update_completion(Process *process) {
+    // Assume completion time is calculated here, adjust wait and completion times if needed
+    process->completion_time += TSLICE;  // At least 1 TSLICE for completion
+    //process->wait_time += /* calculate based on waiting time in queue */;
+}
 // Signal handler for Ctrl+C
 void scheduler_handle_sigint(int sig) {
     printf("\nScheduler terminating due to Ctrl+C\n");
@@ -40,30 +45,40 @@ void add_process(Queue *ready_queue, Process new_process) {
     //printf("process name=%s\n",new_process.name);
     sem_wait(queue_lock);  // Lock the queue
     //printf("sem wait\n");
-    printf("enqueue\n");
+    //printf("enqueue\n");
+    gettimeofday(&new_process.wait_start_time, NULL);
     enqueue(ready_queue, new_process);
     sem_post(queue_lock);  // Release the lock
     //printf("Process added to queue: PID=%d, Name=%s, Completion Time=%d, Wait Time=%d, Priority=%d\n", new_process.pid, new_process.name, new_process.completion_time, new_process.wait_time, new_process.priority);
 }
 
 void signal_processes() {
-    for (int i = 0; i < NCPU; i++) {
-        sem_wait(queue_lock);  // Lock the queue for safe dequeue
-        //printf("Sem wait under signal_process\n");
-        if (!isEmpty(ready_queue)) {
-            //printf("Dequeue-ing a process\n");
-            Process process = dequeue(ready_queue);
+    int processes_to_signal = NCPU; // Track the number of processes we can signal to run
+
+    sem_wait(queue_lock);  // Lock the queue to safely access all processes
+    int queue_size = getQueueSize(ready_queue);
+
+    for (int i = 0; i < queue_size; i++) {
+        Process process = dequeue(ready_queue);
+
+        if (processes_to_signal > 0) {
+            // Signal this process to run as we still have CPU slots
             pid_t pid = process.pid;
-            sem_post(queue_lock);  // Release the lock after dequeueing
-            //printf("Sem post after dequeue\n");
             if (pid > 0) {
-                kill(pid, SIGCONT);  // Send SIGCONT to resume the process
+                update_completion(&process);  // Update completion time
+                kill(pid, SIGCONT);  // Resume the process
             }
+            processes_to_signal--;  // Decrement available CPU slots
         } else {
-            sem_post(queue_lock);  // Release the lock if queue is empty
-            //printf("Sem post if queue is empty why signalling processes\n");
+            // Process has to wait since no CPU slots are available, add TSLICE to wait time
+            process.wait_time += TSLICE;
         }
+
+        // Re-enqueue the process if it hasn't completed
+        enqueue(ready_queue, process);
     }
+
+    sem_post(queue_lock);  // Release the lock
 }
 
 void scheduler_loop() {

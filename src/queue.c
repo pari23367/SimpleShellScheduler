@@ -10,6 +10,13 @@ void initQueue(Queue *q) {
     q->rear = -1;
 }
 
+int getQueueSize(Queue *q) {
+    if (isEmpty(q)) {
+        return 0;
+    }
+    return q->rear - q->front + 1;
+}
+
 Queue* create_shared_queue(sem_t **queue_lock) {
     // Create shared memory for the queue
     int shm_fd = shm_open("/my_queue", O_CREAT | O_RDWR, 0666);

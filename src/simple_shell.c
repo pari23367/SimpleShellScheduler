@@ -4,7 +4,9 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <semaphore.h>
-
+#include <time.h>
+Process process_records[100];  // Array to store process info for reporting
+int process_count = 0;         // Counter for tracking number of processes
 Queue * ready_queue;
 int NCPU;
 int TSLICE;
@@ -12,12 +14,29 @@ sem_t *queue_lock;
 
 void handle_sigint(int sig){
     printf("\nCaught Signle Ctrl+C\n");  //if pressed ctrl +c , process will terminate and this msg will be shown
-    printf("%s",command_details);  
+    //printf("%s",command_details);  
+    print_process_details();
     status = 0; // status was 1 , now it is 0 
     
 }
 
 void signal_handlr(int sig){}
+
+void add_process_record(Process process) {
+    if (process_count < 100) {
+        process_records[process_count++] = process;
+    }
+}
+
+void print_process_details() {
+    printf("\n--- Job Summary ---\n");
+    printf("Name\tPID\tCompletion Time (ms)\tWait Time (ms)\n");
+    for (int i = 0; i < process_count; i++) {
+        Process process = process_records[i];
+        printf("%s\t%d\t%d\t\t\t%d\n", process.name, process.pid,
+               process.completion_time, process.wait_time);
+    }
+}
 
 long get_time() {
     struct timeval current_time;
@@ -49,7 +68,7 @@ void shell_loop() {
         
         //Store the details into the global array details
         //add_details(command ,getpid(),start_time,end_time);  // adding details of every command inthe array
-
+        
         free(command); // De-allocating memory after use
 
     }
@@ -157,6 +176,7 @@ int create_process_and_run(char* command, int is_background) {
     new_process.priority = priority; // Your logic to get priority
   ///  printf("Process created\n");
     // Assuming ready_queue is declared and accessible
+    add_process_record(new_process);
     add_process(ready_queue, new_process);
     // Parent process
     //printf("Checkpint after adding process");
@@ -169,25 +189,7 @@ int create_process_and_run(char* command, int is_background) {
 
     // Fork() returns 0 for child process
     else if (status == 0) {
-       // signal(SIGCONT,signal_handlr);
-      //  printf("checkpoint2\n");
-        //Process new_process;
-        //new_process.pid = getpid(); // Save the child's PID
-        //snprintf(new_process.name, sizeof(new_process.name), "%s", args[1]); // Command name
-        //printf(new_process.name);
-        //new_process.completion_time = 0; // Initialize as needed
-        //new_process.wait_time = 0; // Initialize as needed
-        //new_process.priority = priority; // Your logic to get priority
-      //  printf("Process created\n");
-        // Assuming ready_queue is declared and accessible
-        //add_process(ready_queue, new_process);
-        //printf("command: %s%d\n" ,args[1],getpid());
-        //Do something like this calls scheduler's add method to queue, and at T = 0 scheduler runs all proccesses it has in the queue ?? acc to priority
-        //pause(); // Wait for a signal from the scheduler
-        //printf("Checkpoint after pause\n");
-        // Execute the specified program without additional arguments
         execlp(args[1], args[1], NULL); // Pass only the executable
-
         // If exec fails, print error and exit
         fprintf(stderr, "Execution failed for command: %s\n", args[1]);
         exit(EXIT_FAILURE);

@@ -19,6 +19,7 @@ typedef struct {
     int completion_time;
     int wait_time;
     int priority;
+    struct timeval wait_start_time;
 } Process;
 
 typedef struct {
@@ -31,6 +32,6 @@ void initQueue(Queue *q);
 int isEmpty(Queue *q);
 void enqueue(Queue *q, Process process);
 Process dequeue(Queue *q);
-
+int getQueueSize(Queue *q);
 #endif
 

@@ -26,6 +26,7 @@ void initialize_scheduler(int ncpu, int tslice);
 // Adds a new process to the scheduling queue
 void add_process(Queue *ready_queue, Process new_process);
 
+void update_completion(Process *p);
 // Signals processes to resume or pause based on the scheduling algorithm
 void signal_processes();
 
