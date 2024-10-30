@@ -42,4 +42,5 @@ void add_details(char* command, int pid , long start_time , long end_time);
 void add_to_history(char* command);
 void print_history();
 void free_history();
+void scheduler_loop();
 void add_process(Queue *q, Process p);

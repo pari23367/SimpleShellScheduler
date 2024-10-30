@@ -265,6 +265,18 @@ int main(int argc, char *argv[]) {
     memset(&sa, 0, sizeof(sa));
     sa.sa_handler = handle_sigint;
     sigaction(SIGINT, &sa, NULL);
+    
+    // RUNNING THE SCHEDULER
+    int scheduler_pid = fork();
+    if (scheduler_pid == 0) {
+        // Child process for the scheduler
+        scheduler_loop();  // This function will run independently
+        exit(0);           // Ensure it exits once done
+    } else if (scheduler_pid < 0) {
+        fprintf(stderr, "Failed to fork scheduler process.\n");
+        return EXIT_FAILURE;
+    }
+    
 
     // Start the main shell loop
     shell_loop();
