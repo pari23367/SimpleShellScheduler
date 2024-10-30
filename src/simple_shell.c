@@ -139,14 +139,14 @@ int create_process_and_run(char* command, int is_background) {
     }
     char* args[MAX_ARGS];
     split_command_into_args(command, args);
-    printf("checkpoint 1\n");
+//    printf("checkpoint 1\n");
     if (args[1] == NULL) {
         fprintf(stderr, "Error: No executable specified after 'submit'.\n");
         exit(EXIT_FAILURE);
     }
 
     int priority = get_priority(args[2]);
-    printf("Checkpoint3\n");
+//    printf("Checkpoint3\n");
     Process new_process;
     new_process.pid = status; // Save the child's PID
     snprintf(new_process.name, sizeof(new_process.name), "%s", args[1]); // Command name
@@ -154,11 +154,11 @@ int create_process_and_run(char* command, int is_background) {
     new_process.completion_time = 0; // Initialize as needed
     new_process.wait_time = 0; // Initialize as needed
     new_process.priority = priority; // Your logic to get priority
-    printf("Process created\n");
+  //  printf("Process created\n");
     // Assuming ready_queue is declared and accessible
     add_process(ready_queue, new_process);
     // Parent process
-    printf("Checkpint after adding process");
+    //printf("Checkpint after adding process");
         
     // Fork() returns a negative value if something goes wrong
     if (status < 0) {
@@ -169,10 +169,10 @@ int create_process_and_run(char* command, int is_background) {
     // Fork() returns 0 for child process
     else if (status == 0) {
         signal(SIGCONT,signal_handlr);
-        printf("checkpoint2\n");
+      //  printf("checkpoint2\n");
         //Do something like this calls scheduler's add method to queue, and at T = 0 scheduler runs all proccesses it has in the queue ?? acc to priority
         pause(); // Wait for a signal from the scheduler
-        printf("Checkpoint after pause\n");
+        //printf("Checkpoint after pause\n");
         // Execute the specified program without additional arguments
         execlp(args[1], args[1], NULL); // Pass only the executable
 
@@ -283,7 +283,7 @@ int main(int argc, char *argv[]) {
         return EXIT_FAILURE;
     }
     
-    printf("Reached here\n");
+    //printf("Reached here\n");
     // Start the main shell loop
     shell_loop();
 

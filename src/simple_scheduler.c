@@ -36,31 +36,31 @@ void initialize_scheduler(int ncpu, int tslice) {
 
 // Add a new process to the scheduler
 void add_process(Queue *ready_queue, Process new_process) {
-    printf("Reached add process function\n");
-    printf("process name=%s\n",new_process.name);
+    //printf("Reached add process function\n");
+    //printf("process name=%s\n",new_process.name);
     sem_wait(queue_lock);  // Lock the queue
-    printf("sem wait\n");
+    //printf("sem wait\n");
     enqueue(ready_queue, new_process);
     sem_post(queue_lock);  // Release the lock
-    printf("Process added to queue: PID=%d, Name=%s, Completion Time=%d, Wait Time=%d, Priority=%d\n", new_process.pid, new_process.name, new_process.completion_time, new_process.wait_time, new_process.priority);
+    //printf("Process added to queue: PID=%d, Name=%s, Completion Time=%d, Wait Time=%d, Priority=%d\n", new_process.pid, new_process.name, new_process.completion_time, new_process.wait_time, new_process.priority);
 }
 
 void signal_processes() {
     for (int i = 0; i < NCPU; i++) {
         sem_wait(queue_lock);  // Lock the queue for safe dequeue
-        printf("Sem wait under signal_process\n");
+        //printf("Sem wait under signal_process\n");
         if (!isEmpty(ready_queue)) {
-            printf("Dequeue-ing a process\n");
+//            printf("Dequeue-ing a process\n");
             Process process = dequeue(ready_queue);
             pid_t pid = process.pid;
             sem_post(queue_lock);  // Release the lock after dequeueing
-            printf("Sem post after dequeue\n");
+            //printf("Sem post after dequeue\n");
             if (pid > 0) {
                 kill(pid, SIGCONT);  // Send SIGCONT to resume the process
             }
         } else {
             sem_post(queue_lock);  // Release the lock if queue is empty
-            printf("Sem post if queue is empty why signalling processes\n");
+            //printf("Sem post if queue is empty why signalling processes\n");
         }
     }
 }
@@ -73,16 +73,16 @@ void scheduler_loop() {
     sa.sa_flags = 0;
     sigaction(SIGINT, &sa, NULL);
 
-    printf("Scheduler loop started.\n");
+    //printf("Scheduler loop started.\n");
 
     while (scheduler_running) {
         sleep(TSLICE); // Sleep for the time slice duration
-        printf("About to sem wait scheduler\n");
+        //printf("About to sem wait scheduler\n");
         //sem_wait(queue_lock);
-        printf("Scheduler sem waited\n");
+        //printf("Scheduler sem waited\n");
         // Signal NCPU processes to run
         signal_processes();
-        printf("Signaling processes to run\n");
+        //printf("Signaling processes to run\n");
 
     }
     printf("Scheduler loop exited.\n");
